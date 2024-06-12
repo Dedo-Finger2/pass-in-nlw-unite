@@ -3,6 +3,7 @@ import { ZodTypeProvider } from "fastify-type-provider-zod";
 import z from "zod";
 import { prisma } from "../config/prisma";
 import { BadRequest } from "./_errors/bad-request";
+import { NotFound } from "./_errors/not-found";
 
 export async function checkIn(app: FastifyInstance) {
   app
@@ -35,6 +36,14 @@ export async function checkIn(app: FastifyInstance) {
       }
     }, async (request, reply) => {
       const { attendeeId } = request.params;
+
+      const attendee = await prisma.attendee.findUnique({
+        where: {
+          id: attendeeId,
+        }
+      });
+
+      if (attendee === null) throw new NotFound("Attnedee not found.");
 
       const atteendeeCheckIn = await prisma.checkIn.findUnique({
         where: {
