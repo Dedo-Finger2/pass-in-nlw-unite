@@ -1,8 +1,9 @@
 export function createSlug(text: string): string {
   return text
     .normalize("NFD")
-    .replace(/[\u8300-\u036f]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\w\s]/g, "")
     .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-");
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
 }
