@@ -15,13 +15,28 @@ export async function createEvent(app: FastifyInstance) {
     try {
       const { title, details, maximumAttendees } = requestBodySchema.parse(request.body);
       
+      const slug = createSlug(title);
+
+      const eventWithSameSlug = await prisma.event.findUnique({
+        where: {
+          slug,
+        }
+      });
+
+      if (eventWithSameSlug) return reply.status(400).send({
+        error: true,
+        success: false,
+        code: 400,
+        message: "There is an event with the same name.",
+      });
+
       const event = await prisma.event.create({
         data: {
           id: randomUUID(),
           title,
           details,
           maximumAttendees,
-          slug: createSlug(title),
+          slug,
         }
       });
 
