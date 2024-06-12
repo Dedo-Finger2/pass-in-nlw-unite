@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import z from "zod";
 import { prisma } from "./../config/prisma";
 import { randomUUID } from "node:crypto";
+import { createSlug } from "../utils/create-slug";
 
 export async function createEvent(app: FastifyInstance) {
   app.post("/events", async (request, reply) => {
@@ -20,7 +21,7 @@ export async function createEvent(app: FastifyInstance) {
           title,
           details,
           maximumAttendees,
-          slug: new Date().toISOString(),
+          slug: createSlug(title),
         }
       });
 
