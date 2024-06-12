@@ -36,6 +36,11 @@ export async function getEventAttendees(app: FastifyInstance) {
             success: z.boolean(),
             code: z.number().int().positive(),
             message: z.string(),
+            errors: z.object({
+              eventId: z.array(z.string()).nullish(),
+              pageIndex: z.array(z.string()).nullish(),
+              query: z.array(z.string()).nullish(),
+            }).nullish(),
           }),
           500: z.object({
             error: z.boolean(),
@@ -46,65 +51,51 @@ export async function getEventAttendees(app: FastifyInstance) {
         }
       }
     }, async (request, reply) => {
-      try {
-        const { eventId } = request.params;
-        const { pageIndex, query } = request.query;
+      const { eventId } = request.params;
+      const { pageIndex, query } = request.query;
 
-        const attendees = await prisma.attendee.findMany({
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            createdAt: true,
-            checkIn: {
-              select: {
-                createdAt: true,
-              }
+      const attendees = await prisma.attendee.findMany({
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          createdAt: true,
+          checkIn: {
+            select: {
+              createdAt: true,
             }
-          },
-          where: query ? {
-            eventId,
-            name: {
-              contains: query,
-            }
-          } : {
-            eventId,
-          },
-          take: 10,
-          skip: pageIndex * 10,
-          orderBy: {
-            createdAt: "desc",
-          },
-        });
-
-        return reply.status(200).send({
-          error: false,
-          success: true,
-          code: 200,
-          message: {
-            attendees: attendees.map(attendee => {
-              return {
-                id: attendee.id,
-                name: attendee.name,
-                email: attendee.email,
-                createdAt: attendee.createdAt,
-                checkedInAt: attendee.checkIn?.createdAt ?? null,
-              }
-            })
-          },
-        })
-
-      } catch (error) {
-        console.error(error);
-        
-        return reply.status(500).send(
-          { 
-            error: true,
-            success: false,
-            code: 500,
-            message: "Internal Server Error."
           }
-        );
-      }
+        },
+        where: query ? {
+          eventId,
+          name: {
+            contains: query,
+          }
+        } : {
+          eventId,
+        },
+        take: 10,
+        skip: pageIndex * 10,
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+
+      return reply.status(200).send({
+        error: false,
+        success: true,
+        code: 200,
+        message: {
+          attendees: attendees.map(attendee => {
+            return {
+              id: attendee.id,
+              name: attendee.name,
+              email: attendee.email,
+              createdAt: attendee.createdAt,
+              checkedInAt: attendee.checkIn?.createdAt ?? null,
+            }
+          })
+        },
+      })
     });
 }

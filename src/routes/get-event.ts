@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { ZodTypeProvider } from "fastify-type-provider-zod";
 import z from "zod";
 import { prisma } from "../config/prisma";
+import { NotFound } from "./_errors/not-found";
 
 export async function getEvent(app: FastifyInstance) {
   app
@@ -32,6 +33,15 @@ export async function getEvent(app: FastifyInstance) {
             success: z.boolean(),
             code: z.number().int().positive(),
             message: z.string(),
+            errors: z.object({
+              eventId: z.array(z.string()).nullish(),
+            }).nullish(),
+          }),
+          404: z.object({
+            error: z.boolean(),
+            success: z.boolean(),
+            code: z.number().int().positive(),
+            message: z.string(),
           }),
           500: z.object({
             error: z.boolean(),
@@ -42,60 +52,42 @@ export async function getEvent(app: FastifyInstance) {
         },
       }
     }, async (request, reply) => {
-      try {
-        const { eventId } = request.params;
-  
-        const event = await prisma.event.findUnique({
-          select: {
-            id: true,
-            title: true,
-            slug: true,
-            details: true,
-            maximumAttendees: true,
-            _count: {
-              select: {
-                attendees: true,
-              }
-            }
-          },
-          where: {
-            id: eventId,
-          }
-        });
-  
-        if (event === null) return reply.status(404).send({
-          error: true,
-          success: false,
-          code: 400,
-          message: "Event not found.",
-        });
+      const { eventId } = request.params;
 
-        return reply.status(200).send({
-          error: false,
-          success: true,
-          code: 200,
-          message: {
-            event: {
-              id: event.id,
-              title: event.title,
-              details: event.details,
-              slug: event.slug,
-              maximumAttendees: event.maximumAttendees,
-              currentAmountOfAttendees: event._count.attendees,
+      const event = await prisma.event.findUnique({
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          details: true,
+          maximumAttendees: true,
+          _count: {
+            select: {
+              attendees: true,
             }
-          },
-        });
-      } catch (error) {
-        console.error(error);
-        
-        return reply.status(500).send(
-          { 
-            error: true,
-            success: false,
-            code: 500,
-            message: "Internal Server Error."
           }
-        );
-      }
+        },
+        where: {
+          id: eventId,
+        }
+      });
+
+      if (event === null) throw new NotFound("Event not found.");
+
+      return reply.status(200).send({
+        error: false,
+        success: true,
+        code: 200,
+        message: {
+          event: {
+            id: event.id,
+            title: event.title,
+            details: event.details,
+            slug: event.slug,
+            maximumAttendees: event.maximumAttendees,
+            currentAmountOfAttendees: event._count.attendees,
+          }
+        },
+      });
     });
 }
