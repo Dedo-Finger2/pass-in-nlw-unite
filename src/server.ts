@@ -2,8 +2,14 @@ import fastify from "fastify";
 import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUI from "@fastify/swagger-ui";
 import { jsonSchemaTransform, serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
+import fastifyCors from "@fastify/cors";
 
 const app = fastify();
+
+app.register(fastifyCors, {
+  origin: "*",
+});
+
 const baseUrl = "/api/v1";
 app.setValidatorCompiler(validatorCompiler);
 app.setSerializerCompiler(serializerCompiler);
@@ -40,6 +46,6 @@ app.register(getEventAttendees, { prefix: baseUrl });
 
 app.setErrorHandler(errorHandler);
 
-app.listen({ port: 3333 }, () => {
+app.listen({ port: 3333, host: "0.0.0.0" }).then(() => {
   console.log("🚀 Server running...");
 });
