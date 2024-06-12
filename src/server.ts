@@ -10,11 +10,13 @@ import { createEvent } from "./routes/create-event";
 import { registerForEvent } from "./routes/register-for-event";
 import { getEvent } from "./routes/get-event";
 import { getAttendeeBadge } from "./routes/get-attendee-badge";
+import { checkIn } from "./routes/check-in";
 
 app.register(createEvent, { prefix: baseUrl });
 app.register(registerForEvent, { prefix: baseUrl });
 app.register(getEvent, { prefix: baseUrl });
 app.register(getAttendeeBadge, { prefix: baseUrl });
+app.register(checkIn, { prefix: baseUrl });
 
 app.listen({ port: 3333 }, () => {
   console.log("🚀 Server running...");
