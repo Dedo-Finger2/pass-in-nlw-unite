@@ -1,7 +1,10 @@
 import fastify from "fastify";
+import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
 
 const app = fastify();
 const baseUrl = "/api/v1";
+app.setValidatorCompiler(validatorCompiler);
+app.setSerializerCompiler(serializerCompiler);
 
 import { createEvent } from "./routes/create-event";
 
